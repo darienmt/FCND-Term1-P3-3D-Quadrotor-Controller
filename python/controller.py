@@ -8,6 +8,7 @@ components:
 """
 import numpy as np
 from frame_utils import euler2RM
+from math import sin, cos, tan, sqrt
 
 DRONE_MASS_KG = 0.5
 GRAVITY = -9.81
@@ -22,6 +23,10 @@ class NonlinearController(object):
 
         # Body-rate parameters
         self.body_rate_k_p = np.array([0.01, 0.01, 0.01])
+
+        # Altitude controller parameters
+        self.altitude_delta = 0.7  # 0.7 < delta < 1.0
+        self.altitude_t_rise = 0.01
         return
 
     def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
@@ -86,6 +91,26 @@ class NonlinearController(object):
         """
         return np.array([0.0, 0.0])
 
+    def R(self, altitude):
+        """
+        Calculate the rotation matrix for altitude (roll, pitch, yaw)
+        (phi, theta, psi)
+        """
+        phi, theta, psi = altitude
+        r_x = np.array([[1, 0, 0],
+                    [0, cos(phi), -sin(phi)],
+                    [0, sin(phi), cos(phi)]])
+
+        r_y = np.array([[cos(theta), 0, sin(theta)],
+                        [0, 1, 0],
+                        [-sin(theta), 0, cos(theta)]])
+
+        r_z = np.array([[cos(psi), -sin(psi), 0],
+                        [sin(psi), cos(psi), 0],
+                        [0,0,1]])
+
+        return np.matmul(r_z,np.matmul(r_y,r_x))
+
     def altitude_control(self, altitude_cmd, vertical_velocity_cmd, altitude, vertical_velocity, attitude, acceleration_ff=0.0):
         """Generate vertical acceleration (thrust) command
 
@@ -99,7 +124,17 @@ class NonlinearController(object):
 
         Returns: thrust command for the vehicle (+up)
         """
-        return 10.0 #TODO
+        z_err = altitude_cmd - altitude
+        z_err_dot = vertical_velocity_cmd - vertical_velocity
+        b_z = self.R(attitude)[2,2]
+
+        wn = 1.57/self.altitude_t_rise
+        k_p = wn*wn
+        k_d = 2*self.altitude_delta*wn
+
+        u_1 = k_p * z_err + k_d * z_err_dot + acceleration_ff
+
+        return (u_1 + GRAVITY)/b_z
 
 
     def roll_pitch_controller(self, acceleration_cmd, attitude, thrust_cmd):
