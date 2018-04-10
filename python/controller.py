@@ -22,26 +22,26 @@ class NonlinearController(object):
         """Initialize the controller object and control gains"""
 
         # Body-rate controller parameters
-        self.body_rate_p_k_p = 0.12
-        self.body_rate_q_k_p = 0.12
-        self.body_rate_r_k_p = 0.12
+        self.body_rate_p_k_p = 0.11
+        self.body_rate_q_k_p = 0.11
+        self.body_rate_r_k_p = 0.11
 
         # Altitude controller parameters
-        self.altitude_k_p = 10.
-        self.altitude_k_d = 5.
+        self.altitude_k_p = 40.
+        self.altitude_k_d = 20.
 
         # Yaw controller parameters
-        self.yaw_k_p = 0.01
+        self.yaw_k_p = 0.02
 
         # Roll-pitch controller parameters
-        self.roll_pitch_k_p_roll = 0.8
-        self.roll_pitch_k_p_pitch = 0.8
+        self.roll_pitch_k_p_roll = 10.6
+        self.roll_pitch_k_p_pitch = 10.6
 
         # Lateral controller parameters
-        self.lateral_x_k_p = 0.02
-        self.lateral_x_k_d = 0.005
-        self.lateral_y_k_p = 0.02
-        self.lateral_y_k_d = 0.005
+        self.lateral_x_k_p = 0.22
+        self.lateral_x_k_d = 0.015
+        self.lateral_y_k_p = 0.22
+        self.lateral_y_k_d = 0.015
         return
 
     def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
