@@ -16,36 +16,36 @@ class UnityDrone(Drone):
     UnityDrone class adds additional low-level capabilities to control the
     Unity simulation version of the drone
     """
-    
+
     def __init__(self, connection, tlog_name="TLog.txt"):
-        
+
         super().__init__(connection, tlog_name)
-        
+
         self._target_north = 0.0
         self._target_east = 0.0
         self._target_down = 0.0
         self._target_position_time = 0.0
-        
+
         self._target_velocity_north = 0.0
         self._target_velocity_east = 0.0
         self._target_velocity_down = 0.0
         self._target_velocity_time = 0.0
-        
+
         self._target_acceleration_north = 0.0
         self._target_acceleration_east = 0.0
         self._target_acceleration_down = 0.0
         self._target_acceleration_time = 0.0
-        
+
         self._target_roll = 0.0
         self._target_pitch = 0.0
         self._target_yaw = 0.0
         self._target_attitude_time = 0.0
-        
+
         self._target_roll_rate = 0.0
         self._target_pitch_rate = 0.0
         self._target_yaw_rate = 0.0
         self._target_body_rate_time = 0.0
-        
+
         #Used for the autograder
         self.all_horizontal_errors = np.empty((0),float)
         self._threshold_horizontal_error = 2.0
@@ -60,7 +60,7 @@ class UnityDrone(Drone):
         self._mission_time = 0.0
         self._time0 = None
         self._mission_success = True
-        
+
         #Visdom visualizer
         self._visdom_connected = False
         if visdom_available:
@@ -73,6 +73,8 @@ class UnityDrone(Drone):
                 print('For visual autograder start visdom server: python -m visdom.server')
         else:
             print('Visdom library not installed...')
+
+        self.test_trajectory_file = 'test_trajectory.txt'
 
 
     def cmd_moment(self, roll_moment, pitch_moment, yaw_moment, thrust):
@@ -89,12 +91,12 @@ class UnityDrone(Drone):
         except Exception as e:
             # traceback.print_exc()
             pass
-        
+
     @property
     def local_position_target(self):
         return np.array([self._target_north,self._target_east,self._target_down])
-    
-    @local_position_target.setter    
+
+    @local_position_target.setter
     def local_position_target(self, target):
         """Pass the local position target to the drone (not a command)"""
         self._target_north = target[0]
@@ -106,11 +108,11 @@ class UnityDrone(Drone):
         except:
             # traceback.print_exec()
             pass
-        
+
         #Check for current xtrack error
         if self._time0 is None:
             self._time0 = time.clock()
-        
+
         self._horizontal_error = self.calculate_horizontal_error()
         self.all_horizontal_errors = np.append(self.all_horizontal_errors,self._horizontal_error)
         #print(self._horizontal_error)
@@ -121,15 +123,15 @@ class UnityDrone(Drone):
         self.check_mission_success()
         if self._visdom_connected:
             self._add_visual_data()
-            
+
     @property
     def local_velocity_target(self):
         return np.array([self._target_velocity_north,self._target_velocity_east,self._target_velocity_down])
-    
+
     @local_velocity_target.setter
     def local_velocity_target(self, target):
         """Pass the local velocity target to the drone (not a command)"""
-        
+
         self._target_velocity_north = target[0]
         self._target_velocity_east = target[1]
         self._target_velocity_down = target[2]
@@ -139,11 +141,11 @@ class UnityDrone(Drone):
         except:
             # traceback.print_exec()
             pass
-            
+
     @property
     def local_acceleration_target(self):
         return np.array([self._target_acceleration_north,self._target_acceleration_east,self._target_acceleration_down])
-    
+
     @local_acceleration_target.setter
     def local_acceleration_target(self,target):
         self._target_acceleration_north = target[0]
@@ -158,24 +160,24 @@ class UnityDrone(Drone):
     @property
     def attitude_target(self):
         return np.array([self._target_roll,self._target_pitch,self._target_yaw])
-    
+
     @attitude_target.setter
     def attitude_target(self, target):
         """Pass the attitude target to the drone (not a command)"""
         self._target_roll = target[0]
         self._target_pitch = target[1]
         self._target_yaw = target[2]
-        t = 0 #TODO: pass along the target time        
+        t = 0 #TODO: pass along the target time
         try:
             self.connection.attitude_target(target[0], target[1], target[2], t)
         except:
             # traceback.print_exec()
             pass
-            
+
     @property
     def body_rate_target(self):
         return np.array([self._target_roll_rate,self._target_pitch_rate,self._target_yaw_rate])
-    
+
     @body_rate_target.setter
     def body_rate_target(self, target):
         """Pass the local position target to the drone (not a command)"""
@@ -188,12 +190,12 @@ class UnityDrone(Drone):
         except:
             # traceback.print_exec()
             pass
-    
+
     @property
     def threshold_horizontal_error(self):
         """Maximum allowed xtrack error on the mission"""
         return self._threshold_xtrack
-    
+
     @threshold_horizontal_error.setter
     def threshold_horizontal_error(self, threshold):
         if threshold > 0.0:
@@ -205,36 +207,36 @@ class UnityDrone(Drone):
     def threshold_vertical_error(self):
         """Maximum allowed xtrack error on the mission"""
         return self._threshold_vertical_error
-    
+
     @threshold_vertical_error.setter
     def threshold_vertical(self, threshold):
         if threshold > 0.0:
             self._threshold_vertical_error = threshold
         else:
             print('Vertical error threshold must be greater than 0.0')
-    
+
     @property
     def threshold_time(self):
         """Maximum mission time"""
         return self._threshold_time
-    
+
     @threshold_time.setter
     def threshold_time(self,threshold):
         if threshold > 0.0:
             self._threshold_time = threshold
         else:
             print('Time threshold must be greater than 0.0')
-            
-            
-    
+
+
+
     def load_test_trajectory(self,time_mult=1.0):
         """Loads the test_trajectory.txt
-        
+
         Args:
             time_mult: a multiplier to decrease the total time of the trajectory
-        
+
         """
-        data  = np.loadtxt('test_trajectory.txt', delimiter=',', dtype='Float64')
+        data  = np.loadtxt(self.test_trajectory_file, delimiter=',', dtype='Float64')
         position_trajectory = []
         time_trajectory = []
         yaw_trajectory = []
@@ -246,18 +248,18 @@ class UnityDrone(Drone):
             yaw_trajectory.append(np.arctan2(position_trajectory[i+1][1]-position_trajectory[i][1],position_trajectory[i+1][0]-position_trajectory[i][0]))
         yaw_trajectory.append(yaw_trajectory[-1])
         return(position_trajectory,time_trajectory,yaw_trajectory)
-    
+
     def calculate_horizontal_error(self):
         """Calcuate the error beteween the local position and target local position
-        
+
         """
         target_position = np.array([self._target_north,self._target_east])
         return np.linalg.norm(target_position-self.local_position[0:2])
-    
+
     def calculate_vertical_error(self):
         """Calculate the error in the vertical direction"""
         return np.abs(self._target_down-self.local_position[2])
-    
+
     def print_mission_score(self):
         """Prints the maximum xtrack error, total time, and mission success
 
@@ -268,10 +270,10 @@ class UnityDrone(Drone):
         print('Mission Success: ', self._mission_success)
         if self._visdom_connected:
             self._show_plots()
-        
+
     def check_mission_success(self):
         """Check the mission success criterion (xtrack and time)
-        
+
         """
         if self._horizontal_error > self._maximum_horizontal_error:
             self._maximum_horizontal_error = self._horizontal_error
@@ -283,14 +285,14 @@ class UnityDrone(Drone):
                 self._mission_success = False
         if self._mission_time > self._threshold_time:
             self._mission_success = False
-        
-        
-     
+
+
+
 
     def _show_plots(self):
         self._horizontal_plot = self._v.line(self.all_horizontal_errors, X=self.all_times, opts=dict(title="Horizontal Error",xlabel="Time(s)",ylabel="Error (m)"))
         self._vertical_plot = self._v.line(self.all_vertical_errors, X=self.all_times, opts=dict(title="Vertical Error", xlabel="Time(s)", ylabel="Error (m)"))
-        
+
     def _initialize_plots(self):
         #self._horizontal_plot = self._v.line(np.array([0.0]),X=np.array([0.0]),opts=dict(title="Horizontal Error",xlabel="Time(s)",ylabel="Error (m)"))
         pass
@@ -298,6 +300,6 @@ class UnityDrone(Drone):
     def _add_visual_data(self):
         #self._v.line(np.array([self._horizontal_error]),X=np.array([self._mission_time]),win=self._horizontal_plot,update='append')
         pass
-    
+
     def cmd_position(self, target_north, target_east, target_down, yaw):
         pass

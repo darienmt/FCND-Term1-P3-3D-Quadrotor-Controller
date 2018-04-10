@@ -22,24 +22,26 @@ class NonlinearController(object):
         """Initialize the controller object and control gains"""
 
         # Body-rate controller parameters
-        self.body_rate_k_p = np.array([0.1, 0.1, 0.1])
+        self.body_rate_p_k_p = 0.12
+        self.body_rate_q_k_p = 0.12
+        self.body_rate_r_k_p = 0.12
 
         # Altitude controller parameters
-        self.altitude_delta = 1.0  # 0.7 < delta < 1.0
-        self.altitude_t_rise = 0.1
+        self.altitude_k_p = 10.
+        self.altitude_k_d = 5.
 
         # Yaw controller parameters
         self.yaw_k_p = 0.01
 
         # Roll-pitch controller parameters
-        self.roll_pitch_k_p_roll = 0.1
-        self.roll_pitch_k_p_pitch = 0.1
+        self.roll_pitch_k_p_roll = 0.8
+        self.roll_pitch_k_p_pitch = 0.8
 
         # Lateral controller parameters
-        self.lateral_x_delta = 1.0
-        self.lateral_x_t_rise = 0.1
-        self.lateral_y_delta = 1.0
-        self.lateral_y_t_rise = 0.1
+        self.lateral_x_k_p = 0.02
+        self.lateral_x_k_d = 0.005
+        self.lateral_y_k_p = 0.02
+        self.lateral_y_k_d = 0.005
         return
 
     def trajectory_control(self, position_trajectory, yaw_trajectory, time_trajectory, current_time):
@@ -86,8 +88,7 @@ class NonlinearController(object):
                         (current_time - time0) / (time1 - time0) + position0
         velocity_cmd = (position1 - position0) / (time1 - time0)
 
-        # return (position_cmd, velocity_cmd, yaw_cmd)
-        return (np.array([0.0, 0.0, -3.0]), velocity_cmd, yaw_cmd)
+        return (position_cmd, velocity_cmd, yaw_cmd)
 
     def lateral_position_control(self, local_position_cmd, local_velocity_cmd, local_position, local_velocity,
                                acceleration_ff = np.array([0.0, 0.0])):
@@ -110,21 +111,17 @@ class NonlinearController(object):
 
         x_dot_dot_target, y_dot_dot_target = acceleration_ff
 
-        def pid(e_dot_dot, e_dot, e, delta, t_rise):
-            wn = 1.57/t_rise
-            k_p = wn*wn
-            k_d = 2*delta*wn
-            return k_p * e + k_d * e_dot + e_dot_dot
-
         x_dot_err = x_dot_target - x_dot
         x_err = x_target - x
-        x_dot_dot = pid(x_dot_dot_target, x_dot_err, x_err, self.lateral_x_delta, self.lateral_x_t_rise )
+        x_dot_dot =  self.lateral_x_k_p * x_err + self.lateral_x_k_d * x_dot_err + x_dot_dot_target
 
-        y_dot_err = y_dot_target - y_dot
+        y_dot_err =  y_dot_target - y_dot
         y_err = y_target - y
-        y_dot_dot = pid(y_dot_dot_target, y_dot_err, y_err, self.lateral_y_delta, self.lateral_y_t_rise )
+        y_dot_dot = self.lateral_x_k_p * y_err + self.lateral_y_k_d * y_dot_err + y_dot_dot_target
 
-        return np.array([x_dot_dot, y_dot_dot])
+        # print(f'{x_dot_dot} {y_dot_dot}')
+        print(f'{x_target} {y_target} {x_dot_target} {y_dot_target}')
+        return np.array([-x_dot_dot, -y_dot_dot])
 
     def R(self, altitude):
         """
@@ -133,15 +130,15 @@ class NonlinearController(object):
         """
         phi, theta, psi = altitude
         r_x = np.array([[1, 0, 0],
-                    [0, cos(phi), -sin(phi)],
-                    [0, sin(phi), cos(phi)]])
+                    [0, np.cos(phi), -np.sin(phi)],
+                    [0, np.sin(phi), np.cos(phi)]])
 
-        r_y = np.array([[cos(theta), 0, sin(theta)],
+        r_y = np.array([[np.cos(theta), 0, np.sin(theta)],
                         [0, 1, 0],
-                        [-sin(theta), 0, cos(theta)]])
+                        [-np.sin(theta), 0, np.cos(theta)]])
 
-        r_z = np.array([[cos(psi), -sin(psi), 0],
-                        [sin(psi), cos(psi), 0],
+        r_z = np.array([[np.cos(psi), -np.sin(psi), 0],
+                        [np.sin(psi), np.cos(psi), 0],
                         [0,0,1]])
 
         return np.matmul(r_z,np.matmul(r_y,r_x))
@@ -163,13 +160,9 @@ class NonlinearController(object):
         z_err_dot = vertical_velocity_cmd - vertical_velocity
         b_z = self.R(attitude)[2,2]
 
-        wn = 1.57/self.altitude_t_rise
-        k_p = wn*wn
-        k_d = 2*self.altitude_delta*wn
-
-        u_1 = k_p * z_err + k_d * z_err_dot + acceleration_ff
-
-        return (u_1 + GRAVITY)/b_z
+        u_1 = self.altitude_k_p * z_err + self.altitude_k_d * z_err_dot + acceleration_ff
+        thrust = (u_1 - GRAVITY)/b_z
+        return min(thrust, MAX_THRUST)
 
 
     def roll_pitch_controller(self, acceleration_cmd, attitude, thrust_cmd):
@@ -202,7 +195,7 @@ class NonlinearController(object):
         rot_rate = np.matmul(rot_mat1,np.array([b_x_commanded_dot,b_y_commanded_dot]).T)
         p_c = rot_rate[0]
         q_c = rot_rate[1]
-
+        # print(f'{b_x_err} {b_y_err}')
         return np.array([p_c, q_c])
 
     def body_rate_control(self, body_rate_cmd, body_rate):
@@ -214,7 +207,19 @@ class NonlinearController(object):
 
         Returns: 3-element numpy array, desired roll moment, pitch moment, and yaw moment commands in Newtons*meters
         """
-        return np.multiply(self.body_rate_k_p, body_rate_cmd - body_rate)
+        p_c, q_c, r_c = body_rate_cmd
+        p_actual, q_actual, r_actual = body_rate
+
+        p_err = p_c - p_actual
+        u_bar_p = self.body_rate_p_k_p * p_err
+
+        q_err = q_c - q_actual
+        u_bar_q = self.body_rate_q_k_p * q_err
+
+        r_err = r_c - r_actual
+        u_bar_r = self.body_rate_r_k_p * r_err
+        # print(f'{u_bar_p} {u_bar_q} {u_bar_r}')
+        return np.array([u_bar_p, u_bar_q, u_bar_r])
 
     def yaw_control(self, yaw_cmd, yaw):
         """ Generate the target yawrate
