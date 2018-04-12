@@ -76,20 +76,45 @@ VehicleCommand QuadControl::GenerateMotorCommands(float collThrustCmd, V3F momen
 //  cmd.desiredThrustsN[1] = mass * 9.81f / 4.f; // front right
 //  cmd.desiredThrustsN[2] = mass * 9.81f / 4.f; // rear left
 //  cmd.desiredThrustsN[3] = mass * 9.81f / 4.f; // rear right
-  float c_bar = -collThrustCmd * mass / kappa;
-  float p_bar = momentCmd.x * Ixx / (kappa * l);
-  float q_bar = momentCmd.y * Iyy / (kappa * l);
-  float r_bar = momentCmd.z * Izz / (kappa * l);
+  float t1 = momentCmd.x / l;
+  float t2 = momentCmd.y / l;
+  float t3 = - momentCmd.z / kappa;
+  float t4 = collThrustCmd;
   
-  float omega_4 = (c_bar + p_bar - r_bar - q_bar) / 4.f;
-  float omega_3 = ((r_bar - p_bar)/2.f) + omega_4;
-  float omega_2 = ((c_bar - p_bar)/2.f) - omega_3;
-  float omega_1 = c_bar - omega_2 - omega_3 - omega_4;
+  float f4 = (t1 - t2 - t3 + t4)/4.f;
+  float f3 = (-t1 - t2 + t3 + t4)/4.f;
+  float f2 = (-t1 + t2 - t3 + t4)/4.f;
+  float f1 = (t1 + t2 + t3 + t4)/4.f;
+
+  // Min/max thrust
+  if ( f1 < minMotorThrust ) {
+    f1 = minMotorThrust;
+  } if ( f1 > maxMotorThrust ) {
+    f1 = maxMotorThrust;
+  }
   
-  cmd.desiredThrustsN[0] = kappa * omega_1; // front left
-  cmd.desiredThrustsN[1] = kappa * omega_2; // front right
-  cmd.desiredThrustsN[2] = kappa * omega_4; // rear left
-  cmd.desiredThrustsN[3] = kappa * omega_3; // rear right
+  if ( f2 < minMotorThrust ) {
+    f2 = minMotorThrust;
+  } if ( f2 > maxMotorThrust ) {
+    f2 = maxMotorThrust;
+  }
+  
+  if ( f3 < minMotorThrust ) {
+    f3 = minMotorThrust;
+  } if ( f3 > maxMotorThrust ) {
+    f3 = maxMotorThrust;
+  }
+  
+  if ( f4 < minMotorThrust ) {
+    f4 = minMotorThrust;
+  } if ( f4 > maxMotorThrust ) {
+    f4 = maxMotorThrust;
+  }
+  
+  cmd.desiredThrustsN[0] = f1; // front left
+  cmd.desiredThrustsN[1] = f2; // front right
+  cmd.desiredThrustsN[2] = f4; // rear left
+  cmd.desiredThrustsN[3] = f3; // rear right
   
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -145,8 +170,31 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
-
-
+  float b_x = R(0,2);
+  float b_x_err = accelCmd.x - accels.x;
+  float b_x_p_term = kpBank * b_x_err;
+  
+  float b_y = R(1,2);
+  float b_y_err = accelCmd.x - accels.x;
+  float b_y_p_term = kpBank * b_y_err;
+  
+  Mat3x3F rot_mat1;
+  rot_mat1(0,0) = R(1,0);
+  rot_mat1(0,1) = -R(0,0);
+  rot_mat1(1,0) = R(1,1);
+  rot_mat1(1,1) = R(0,1);
+  
+  rot_mat1 = rot_mat1 / R(2,2);
+  
+  V3F cmd_dot;
+  cmd_dot.x = b_x_p_term;
+  cmd_dot.y = b_y_p_term;
+  
+  V3F rot_rate;
+  rot_rate = rot_mat1 * cmd_dot;
+  
+  pqrCmd.x = rot_rate.x;
+  pqrCmd.y = rot_rate.y;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   return pqrCmd;
@@ -177,7 +225,7 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
-
+//  thrust = mass * 9.81f;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
