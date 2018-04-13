@@ -138,8 +138,11 @@ V3F QuadControl::BodyRateControl(V3F pqrCmd, V3F pqr)
   V3F momentCmd;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
-  momentCmd = kpPQR * ( pqrCmd - pqr );
+  V3F I;
+  I.x = Ixx;
+  I.y = Iyy;
+  I.z = Izz;
+  momentCmd = I * kpPQR * ( pqrCmd - pqr );
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -171,11 +174,11 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
   float b_x = R(0,2);
-  float b_x_err = accelCmd.x - accels.x;
+  float b_x_err = accelCmd.x - b_x;
   float b_x_p_term = kpBank * b_x_err;
   
   float b_y = R(1,2);
-  float b_y_err = accelCmd.x - accels.x;
+  float b_y_err = accelCmd.y - b_y;
   float b_y_p_term = kpBank * b_y_err;
   
   Mat3x3F rot_mat1;
@@ -224,9 +227,25 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   float thrust = 0;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  float z_err = posZCmd - posZ;
+  float z_dot_err = velZCmd - velZ;
 
-//  thrust = mass * 9.81f;
+  float p_term = kpPosZ * z_err;
+  float d_term = kpVelZ * z_dot_err;
 
+  float b_z = R(2,2);
+
+  float u_1_bar = p_term + d_term + accelZCmd;
+
+  float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
+
+  if ( acc < 0 ) { // Is going down
+    acc = - fmodf( -acc, maxDescentRate);
+  } else {
+    acc = fmodf( acc, maxAscentRate);
+  }
+//  thrust = 0.f;// - mass * acc;
+//  thrust = - mass * CONST_GRAVITY;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
   return thrust;
@@ -258,8 +277,26 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   posCmd.z = pos.z;
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
-
   
+  V3F kpPos;
+  kpPos.x = kpPosXY;
+  kpPos.y = kpPosXY;
+  kpPos.z = 0.f;
+
+  V3F kpVel;
+  kpPos.x = kpVelXY;
+  kpPos.y = kpVelXY;
+  kpPos.z = 0.f;
+  
+  V3F capVelCmd;
+  capVelCmd.x = fmodf(velCmd.x, maxSpeedXY);
+  capVelCmd.y = fmodf(velCmd.y, maxSpeedXY);
+  capVelCmd.z = 0.f;
+  
+  accelCmd = kpPos * ( posCmd - pos ) + kpVel * ( capVelCmd - velCmd ) + accelCmd;
+  
+  accelCmd.x = fmodf(accelCmd.x, maxAccelXY);
+  accelCmd.y = fmodf(accelCmd.y, maxAccelXY);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
