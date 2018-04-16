@@ -78,7 +78,7 @@ VehicleCommand QuadControl::GenerateMotorCommands(float collThrustCmd, V3F momen
 //  cmd.desiredThrustsN[3] = mass * 9.81f / 4.f; // rear right
   float t1 = momentCmd.x / l;
   float t2 = momentCmd.y / l;
-  float t3 = momentCmd.z / kappa;
+  float t3 = - momentCmd.z / kappa;
   float t4 = collThrustCmd;
 
   float f4 = (t1 - t2 - t3 + t4)/4.f;
@@ -214,13 +214,13 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
 
   float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
 
-  if ( acc < 0 ) { // Is going down
-    acc = -fmodf( -acc, maxDescentRate);
-  } else {
-    acc = fmodf( acc, maxAscentRate);
-  }
-//  thrust = mass * acc;
-  thrust = mass * CONST_GRAVITY;
+//  if ( acc < 0 ) { // Is going down
+//    acc = -fmodf( -acc, maxDescentRate);
+//  } else {
+//    acc = fmodf( acc, maxAscentRate);
+//  }
+  thrust = - mass * acc;
+//  thrust = mass * CONST_GRAVITY;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
   return thrust;
@@ -235,7 +235,7 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   //   posCmd: desired position, in NED [m]
   //   velCmd: desired velocity, in NED [m/s]
   //   pos: current position, NED [m]
-  //   vel: current velocity, NED [m/s]
+  //   vel: current velocity, NED [m/s]
   //   accelCmd: desired acceleration, NED [m/s2]
   // OUTPUT:
   //   return a V3F with desired horizontal accelerations. 
@@ -268,10 +268,11 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   capVelCmd.y = fmodf(velCmd.y, maxSpeedXY);
   capVelCmd.z = 0.f;
   
-  accelCmd = kpPos * ( posCmd - pos ) + kpVel * ( capVelCmd - velCmd ) + accelCmd;
+  accelCmd = kpPos * ( posCmd - pos ) + kpVel * ( capVelCmd - vel ) + accelCmd;
   
-  accelCmd.x = fmodf(accelCmd.x, maxAccelXY);
-  accelCmd.y = fmodf(accelCmd.y, maxAccelXY);
+  accelCmd.x = - fmodf(accelCmd.x, maxAccelXY);
+  accelCmd.y = - fmodf(accelCmd.y, maxAccelXY);
+  accelCmd.z = 0;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -294,7 +295,7 @@ float QuadControl::YawControl(float yawCmd, float yaw)
   float yawRateCmd=0;
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
-  yawRateCmd = kpYaw * ( yawRateCmd - yaw );
+  yawRateCmd = kpYaw * ( yawCmd - yaw );
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   return yawRateCmd;

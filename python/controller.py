@@ -161,8 +161,8 @@ class NonlinearController(object):
         b_z = self.R(attitude)[2,2]
 
         u_1 = self.altitude_k_p * z_err + self.altitude_k_d * z_err_dot + acceleration_ff
-        thrust = (u_1 - GRAVITY)/b_z
-        return min(thrust, MAX_THRUST)
+        acc = (u_1 - GRAVITY)/b_z
+        return acc
 
 
     def roll_pitch_controller(self, acceleration_cmd, attitude, thrust_cmd):
