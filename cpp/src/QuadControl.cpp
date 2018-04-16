@@ -78,43 +78,18 @@ VehicleCommand QuadControl::GenerateMotorCommands(float collThrustCmd, V3F momen
 //  cmd.desiredThrustsN[3] = mass * 9.81f / 4.f; // rear right
   float t1 = momentCmd.x / l;
   float t2 = momentCmd.y / l;
-  float t3 = - momentCmd.z / kappa;
+  float t3 = momentCmd.z / kappa;
   float t4 = collThrustCmd;
-  
+
   float f4 = (t1 - t2 - t3 + t4)/4.f;
   float f3 = (-t1 - t2 + t3 + t4)/4.f;
   float f2 = (-t1 + t2 - t3 + t4)/4.f;
   float f1 = (t1 + t2 + t3 + t4)/4.f;
 
-  // Min/max thrust
-  if ( f1 < minMotorThrust ) {
-    f1 = minMotorThrust;
-  } if ( f1 > maxMotorThrust ) {
-    f1 = maxMotorThrust;
-  }
-  
-  if ( f2 < minMotorThrust ) {
-    f2 = minMotorThrust;
-  } if ( f2 > maxMotorThrust ) {
-    f2 = maxMotorThrust;
-  }
-  
-  if ( f3 < minMotorThrust ) {
-    f3 = minMotorThrust;
-  } if ( f3 > maxMotorThrust ) {
-    f3 = maxMotorThrust;
-  }
-  
-  if ( f4 < minMotorThrust ) {
-    f4 = minMotorThrust;
-  } if ( f4 > maxMotorThrust ) {
-    f4 = maxMotorThrust;
-  }
-  
-  cmd.desiredThrustsN[0] = f1; // front left
-  cmd.desiredThrustsN[1] = f2; // front right
-  cmd.desiredThrustsN[2] = f4; // rear left
-  cmd.desiredThrustsN[3] = f3; // rear right
+  cmd.desiredThrustsN[0] = CONSTRAIN(f1, minMotorThrust, maxMotorThrust); // front left
+  cmd.desiredThrustsN[1] = CONSTRAIN(f2, minMotorThrust, maxMotorThrust); // front right
+  cmd.desiredThrustsN[2] = CONSTRAIN(f4, minMotorThrust, maxMotorThrust); // rear left
+  cmd.desiredThrustsN[3] = CONSTRAIN(f3, minMotorThrust, maxMotorThrust); // rear right
   
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -185,7 +160,7 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
   rot_mat1(0,0) = R(1,0);
   rot_mat1(0,1) = -R(0,0);
   rot_mat1(1,0) = R(1,1);
-  rot_mat1(1,1) = R(0,1);
+  rot_mat1(1,1) = -R(0,1);
   
   rot_mat1 = rot_mat1 / R(2,2);
   
@@ -240,12 +215,12 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
 
   if ( acc < 0 ) { // Is going down
-    acc = - fmodf( -acc, maxDescentRate);
+    acc = -fmodf( -acc, maxDescentRate);
   } else {
     acc = fmodf( acc, maxAscentRate);
   }
-//  thrust = 0.f;// - mass * acc;
-//  thrust = - mass * CONST_GRAVITY;
+//  thrust = mass * acc;
+  thrust = mass * CONST_GRAVITY;
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
   return thrust;
@@ -284,9 +259,9 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   kpPos.z = 0.f;
 
   V3F kpVel;
-  kpPos.x = kpVelXY;
-  kpPos.y = kpVelXY;
-  kpPos.z = 0.f;
+  kpVel.x = kpVelXY;
+  kpVel.y = kpVelXY;
+  kpVel.z = 0.f;
   
   V3F capVelCmd;
   capVelCmd.x = fmodf(velCmd.x, maxSpeedXY);
@@ -319,7 +294,7 @@ float QuadControl::YawControl(float yawCmd, float yaw)
   float yawRateCmd=0;
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
-
+  yawRateCmd = kpYaw * ( yawRateCmd - yaw );
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
   return yawRateCmd;
