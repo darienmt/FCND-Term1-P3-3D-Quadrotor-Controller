@@ -204,13 +204,14 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
   float z_err = posZCmd - posZ;
   float z_dot_err = velZCmd - velZ;
+  integratedAltitudeError += z_err * dt;
 
   float p_term = kpPosZ * z_err;
   float d_term = kpVelZ * z_dot_err;
-
+  float i_term = KiPosZ * integratedAltitudeError;
   float b_z = R(2,2);
 
-  float u_1_bar = p_term + d_term + accelZCmd;
+  float u_1_bar = p_term + d_term + i_term + accelZCmd;
 
   float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
 
@@ -270,8 +271,8 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   
   accelCmd = kpPos * ( posCmd - pos ) + kpVel * ( capVelCmd - vel ) + accelCmd;
   
-  accelCmd.x = - fmodf(accelCmd.x, maxAccelXY);
-  accelCmd.y = - fmodf(accelCmd.y, maxAccelXY);
+  accelCmd.x = - CONSTRAIN(accelCmd.x, -maxAccelXY, maxAccelXY);
+  accelCmd.y = - CONSTRAIN(accelCmd.y, -maxAccelXY, maxAccelXY);
   accelCmd.z = 0;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
