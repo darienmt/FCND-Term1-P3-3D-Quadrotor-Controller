@@ -51,6 +51,4 @@ public:
   // integral control
   float integratedAltitudeError;
   
-  // Another system parameters params
-  float l;
 };
