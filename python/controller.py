@@ -120,7 +120,7 @@ class NonlinearController(object):
         y_dot_dot = self.lateral_x_k_p * y_err + self.lateral_y_k_d * y_dot_err + y_dot_dot_target
 
         # print(f'{x_dot_dot} {y_dot_dot}')
-        print(f'{x_target} {y_target} {x_dot_target} {y_dot_target}')
+        #print(f'{x_target} {y_target} {x_dot_target} {y_dot_target}')
         return np.array([-x_dot_dot, -y_dot_dot])
 
     def R(self, altitude):
