@@ -82,15 +82,10 @@ VehicleCommand QuadControl::GenerateMotorCommands(float collThrustCmd, V3F momen
   float t3 = - momentCmd.z / kappa;
   float t4 = collThrustCmd;
 
-  float f4 = (t1 - t2 - t3 + t4)/4.f;
-  float f3 = (-t1 - t2 + t3 + t4)/4.f;
-  float f2 = (-t1 + t2 - t3 + t4)/4.f;
-  float f1 = (t1 + t2 + t3 + t4)/4.f;
-
-  cmd.desiredThrustsN[0] = f1; // front left
-  cmd.desiredThrustsN[1] = f2; // front right
-  cmd.desiredThrustsN[2] = f4; // rear left
-  cmd.desiredThrustsN[3] = f3; // rear right
+  cmd.desiredThrustsN[0] = (t1 + t2 + t3 + t4)/4.f;  // front left  - f1
+  cmd.desiredThrustsN[1] = (-t1 + t2 - t3 + t4)/4.f; // front right - f2
+  cmd.desiredThrustsN[2] = (t1 - t2 - t3 + t4)/4.f ; // rear left   - f4
+  cmd.desiredThrustsN[3] = (-t1 - t2 + t3 + t4)/4.f; // rear right  - f3
   
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -198,13 +193,11 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
   float z_err = posZCmd - posZ;
   float p_term = kpPosZ * z_err;
   
-  float z_dot_cmd = CONSTRAIN(velZCmd, -maxDescentRate, maxAscentRate);
-  
-  float z_dot_err = z_dot_cmd - velZ;
+  float z_dot_err = velZCmd - velZ;
   integratedAltitudeError += z_err * dt;
 
   
-  float d_term = kpVelZ * z_dot_err;
+  float d_term = kpVelZ * z_dot_err + velZ;
   float i_term = KiPosZ * integratedAltitudeError;
   float b_z = R(2,2);
 
@@ -212,8 +205,7 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
 
   float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
 
-  thrust = - mass * acc;
-//  thrust = mass * CONST_GRAVITY;
+  thrust = - mass * CONSTRAIN(acc, - maxAscentRate / dt, maxAscentRate / dt);
   /////////////////////////////// END STUDENT CODE ////////////////////////////
   
   return thrust;
@@ -258,7 +250,9 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   
   V3F capVelCmd;
   if ( velCmd.mag() > maxSpeedXY ) {
-    velCmd = velCmd.norm() * maxSpeedXY;
+    capVelCmd = velCmd.norm() * maxSpeedXY;
+  } else {
+    capVelCmd = velCmd;
   }
   
   accelCmd = kpPos * ( posCmd - pos ) + kpVel * ( capVelCmd - vel ) + accelCmd;

@@ -9,7 +9,7 @@
 UseIdealEstimator=1
 
 # Physical properties
-Mass = 0.4789
+Mass = 0.5
 # [.478 .492 @ 0.09]
 L = 0.17
 Ixx = 0.0023
@@ -20,35 +20,36 @@ minMotorThrust = .1
 maxMotorThrust = 4.5
 
 # Position control gains
-kpPosXY = 0.45
-# kpPosXY = 2.4, 0.9, 0.7 - Scenario 3
-# kpPosXY = 1 - Default
-kpPosZ = 200
-# kpPosZ = 6, 100, 0 - Scenario 3
-# kpPosZ = 1 - Default
-KiPosZ = 10
-# KiPosZ = 20 - Default
+kpPosXY = 30
+kpPosZ = 20
+KiPosZ = 40
 
-# Velocity control gains 0.405
-kpVelXY = 0.35
-# kpVelXY = 1.1, 0.4, 0.33 - Scenario 3
-# kpVelXY = 4 - Default
-kpVelZ = 9
-# kpVelZ = 5, 100 - Scenario 3
-# kpVelZ = 4 - Default
+# Velocity control gains
+kpVelXY = 12.0
+kpVelZ = 9.0
 
 # Angle control gains
-kpBank = 6.7
-# kpBank = 12, xx, 6.7 - Scenario 3
-# kpBank = 5 - Default
-kpYaw = 0
-# kpYaw = 1.2, 2.3, 1.81 - Scenario 3
-# kpYaw = 1 - Default
+kpBank = 10
+kpYaw = 2
 
 # Angle rate gains
-kpPQR = 10.5, 10.5, 2.4
-# kpPQR = [18, 23, 2],[18, 23, 3], [10.5, 10.5, 2.4]  - Scenario 3
-# kpPQR = 23, 23, 5 - Default
+kpPQR = 95, 95, 6
+
+# Position control gains
+# kpPosXY = 30
+# kpPosZ = 20
+# KiPosZ = 40
+
+# Velocity control gains
+# kpVelXY = 12.0
+# kpVelZ = 9.0
+
+# Angle control gains
+# kpBank = 10
+# kpYaw = 2
+
+# Angle rate gains
+# kpPQR = 95, 95, 6
 
 # limits
 maxAscentRate = 5
