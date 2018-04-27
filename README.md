@@ -70,7 +70,44 @@ Maximum Vertical Error:  0.6513343825915365
 Mission Time:  4.223532
 Mission Success:  True
 ```
-The telemetry file for this particular execution is [this file](./python/telemetry/TLog02.txt).
+The telemetry file for this particular execution is [this file](./python/telemetry/TLog02.txt). To tune the controller is very hard on this trajectory. At the beginning, you don't know what to expect. The trajectory looks something like this:
+
+![Python simulator trajectory](./images/python-simulator-trajectory.png)
+
+In order to check the implementation and do some tuning of the parameters before testing them on the real trajectory, I generated the following trajectories:
+
+- [go_north_east](./python/trajectories/go_north_east.txt)
+- [go_north](./python/trajectories/go_north.txt)
+- [stay_there](./python/trajectories/stay_there.txt)
+
+To load one of this trajectories instead of [test_trajectory.txt](./python/test_trajectory.txt), uncomment line 210 on [controls_flyer.py](./python/controls_flyer.py#L210) and set the desired trajectory file there. The generation of the trajectories was done by [Test Trajectory](./visualizations/Test Trajectory.ipynb) Jupyter Notebook.
+
+## C++ implementation
+
+This is the more complicated part of the project. If the parameter tuning on the python part was hard, this part is ten time harder. The C++ part is just a detail on this tough task. In this case, the simulator is enforce more real limits to the implementation and things can go really wrong when some of those limits are not implemented properly. More interesting than that is when things are not completely wrong, just a bit wrong. Udacity also provide a [seed project](https://github.com/udacity/FCND-Controls-CPP) with the simulator implementation and place holders for the controller code. The seed project README.md provide guides to run the project and information of the task we need to execute for implementing the controller. There are five scenarios we need to cover. The simulator run in loop on the current scenario and show on the standard output an indication the scenario pass or not.
+
+All the C++ code is in the [/cpp](./cpp) directory. The more interesting files are:
+
+- [/cpp/config/QuadControlParams.txt](./cpp/config/QuadControlParams.txt): This file contains the configuration for the controller. While the simulator is running, you can modify this file and the simulator will "refresh" those parameter on the next loop execution.
+- [/cpp/src/QuadControl.cpp](./cpp/src/QuadControl.cpp): This is where all the fun is, but I should not say this because this file contains the implementation of the controller only. Most of the time needed to pass the scenarios is spend on the parameter tuning.
+
+### Prerequisites
+
+Nothing extra needs to be install but the IDE needed to compile the code. In my case XCode because I am using a Macbook. Please, follow the instructions on the [seed project README.md](https://github.com/udacity/FCND-Controls-CPP).
+
+### Run the code
+
+Following the instruction on the seed project, load the project on the IDE. Remember the code is on [/cpp](./cpp).
+
+#### Scenario 1 : Intro
+
+In this scenario, we adjust the mass of the drone in [/cpp/config/QuadControlParams.txt](./cpp/config/QuadControlParams.txt) until it hover for a bit:
+
+![C++ Scenario 1](./images/cpp-scenario-1.gif)
+
+The video for is [cpp-scenario-1.mov](./videos/cpp-scenario-1.mov)
+
+
 
 # [Project Rubric](https://review.udacity.com/#!/rubrics/1643/view)
 
