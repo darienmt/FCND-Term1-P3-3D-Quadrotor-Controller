@@ -99,7 +99,7 @@ Nothing extra needs to be install but the IDE needed to compile the code. In my 
 
 Following the instruction on the seed project, load the project on the IDE. Remember the code is on [/cpp](./cpp).
 
-#### Scenario 1 : Intro
+#### Scenario 1: Intro
 
 In this scenario, we adjust the mass of the drone in [/cpp/config/QuadControlParams.txt](./cpp/config/QuadControlParams.txt) until it hover for a bit:
 
@@ -113,7 +113,7 @@ When the scenario is passing the test, you should see this line on the standard 
 PASS: ABS(Quad.PosFollowErr) was less than 0.500000 for at least 0.800000 seconds
 ```
 
-#### Scenario 2 : Body rate and roll/pitch control
+#### Scenario 2: Body rate and roll/pitch control
 
 Now is time to start coding. The [GenerateMotorCommands method](./cpp/src/QuadControl.cpp#L58-L53) needs to be coded resolving this equations:
 
@@ -144,11 +144,11 @@ PASS: ABS(Quad.Roll) was less than 0.025000 for at least 0.750000 seconds
 PASS: ABS(Quad.Omega.X) was less than 2.500000 for at least 0.750000 seconds
 ```
 
-#### Scenario 3 : Position/velocity and yaw angle control
+#### Scenario 3: Position/velocity and yaw angle control
 
 There a three methods to implement here:
 
-- [AltitudeControl](./cpp/QuadControl.cpp#L169-L212): This is a [PID controller](https://en.wikipedia.org/wiki/PID_controller) to control the acceleration meaning the thrust needed to control the altitude.
+- [AltitudeControl](./cpp/QuadControl.cpp#L169-L212): This is a [PD controller](https://en.wikipedia.org/wiki/PID_controller) to control the acceleration meaning the thrust needed to control the altitude.
 
 ![Altitude controller equations](./images/altitude_eq.gif)
 
@@ -171,6 +171,42 @@ PASS: ABS(Quad1.Pos.X) was less than 0.100000 for at least 1.250000 seconds
 PASS: ABS(Quad2.Pos.X) was less than 0.100000 for at least 1.250000 seconds
 PASS: ABS(Quad2.Yaw) was less than 0.100000 for at least 1.000000 seconds
 ```
+
+#### Scenario 4: Non-idealities and robustness
+
+This is a fun scenario. Everything is coded and tuned already, right? Ok, we need to add the an integral part to the altitude controller to move it from PD to PID controller. What happen to me here is that everything start not working correctly and I have to tune everything again, starting from scenario -1. Remember patience is a "virtue", and to it again. If you cannot and get frustrated talk to your peers, they will be able to give you hints. It is hard, but doable:
+
+![C++ Scenario 4](./images/cpp-scenario-4.gif)
+
+This video is [cpp-scenario-4.mov](./videos/cpp-scenario-4.mov)
+
+When the scenario is passing the test, you should see this line on the standard output:
+
+```
+PASS: ABS(Quad1.PosFollowErr) was less than 0.100000 for at least 1.500000 seconds
+PASS: ABS(Quad2.PosFollowErr) was less than 0.100000 for at least 1.500000 seconds
+PASS: ABS(Quad3.PosFollowErr) was less than 0.100000 for at least 1.500000 seconds
+```
+
+#### Scenario 5: Tracking trajectories
+
+This is the final non-optional scenario. The drone needs to follow a trajectory. It will show all the errors in your code and also force you to tune again some parameters. Remember there are comments on the controller methods regarding limits that needs to me imposed on the code. Here those limits are needed to pass.
+
+![C++ Scenario 5](./images/cpp-scenario-5.gif)
+
+This video is [cpp-scenario-5.mov](./videos/cpp-scenario-5.mov)
+
+When the scenario is passing the test, you should see this line on the standard output:
+
+```
+PASS: ABS(Quad2.PosFollowErr) was less than 0.250000 for at least 3.000000 seconds
+```
+
+There are a few optional scenarios on this project, but I was really tired. Too many long hours tuning parameters and/or finding bugs. There should be a lot of room for improvement. Here is the video of a multi-drone scenario:
+
+![C++ Multidrone](./images/cpp-scenario-multi-drone.gif)
+
+No idea why some of them go nuts!!!!! (and then come back to the "formation".)
 
 # [Project Rubric](https://review.udacity.com/#!/rubrics/1643/view)
 
