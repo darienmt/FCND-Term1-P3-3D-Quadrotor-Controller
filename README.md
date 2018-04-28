@@ -144,6 +144,33 @@ PASS: ABS(Quad.Roll) was less than 0.025000 for at least 0.750000 seconds
 PASS: ABS(Quad.Omega.X) was less than 2.500000 for at least 0.750000 seconds
 ```
 
+#### Scenario 3 : Position/velocity and yaw angle control
+
+There a three methods to implement here:
+
+- [AltitudeControl](./cpp/QuadControl.cpp#L169-L212): This is a [PID controller](https://en.wikipedia.org/wiki/PID_controller) to control the acceleration meaning the thrust needed to control the altitude.
+
+![Altitude controller equations](./images/altitude_eq.gif)
+
+In order to test this, go back to scenario 2 and make sure the drone doesn't fall. In that scenario the PID is configured to not act and the thrust should be `mass * CONST_GRAVITY`.
+
+- [LateralPositionControl](./cpp/QuadControl.cpp#L215-L267) This is another PID controller to control acceleration on `x` and `y`.
+
+- [YawControl](./cpp/QuadControl.cpp#L270-L302): This is a simpler case because it is P controller. It is better to optimize the yaw to be between `[-pi, pi]`.
+
+Once all the code is implemented, put all the `kpYaw`,`kpPosXY`, `kpVelXY`, `kpPosZ` and `kpVelZ` to zero. Take a deep breath, and start tuning from the altitude controller to the yaw controller. It takes time. Here is a video of the scenario when it pass:
+
+![C++ Scenario 3](./images/cpp-scenario-3.gif)
+
+This video is [cpp-scenario-3.mov](./videos/cpp-scenario-3.mov)
+
+When the scenario is passing the test, you should see this line on the standard output:
+
+```
+PASS: ABS(Quad1.Pos.X) was less than 0.100000 for at least 1.250000 seconds
+PASS: ABS(Quad2.Pos.X) was less than 0.100000 for at least 1.250000 seconds
+PASS: ABS(Quad2.Yaw) was less than 0.100000 for at least 1.000000 seconds
+```
 
 # [Project Rubric](https://review.udacity.com/#!/rubrics/1643/view)
 
