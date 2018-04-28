@@ -12,7 +12,7 @@ There two parts for this project where the controller needs to be implemented wi
 
 ## Python implementation
 
-Based on the [first project](https://github.com/darienmt/FCND-Term1-P1-Backyard-Flyer) on the FCND. We need to control a simulated drone using python to fly in a square trajectory in a backyard. The controller needs to be implemented on the [controller.py class](./python/controller.py). Udacity provides a [seed project](https://github.com/udacity/FCND-Controls) all the code you need to be able to focus only on the controller, but changes on that code is welcome as well.  Udacity's FCND Simulator could be downloaded [here]((https://github.com/udacity/FCND-Simulator-Releases/releases). The python code use [Udacidrone](https://udacity.github.io/udacidrone/) API to communicate with the simulator. This API use [MAVLink](http://qgroundcontrol.org/mavlink/start) protocol.
+Based on the [first project](https://github.com/darienmt/FCND-Term1-P1-Backyard-Flyer) on the FCND. We need to control a simulated drone using python to fly in a square trajectory in a backyard. The controller needs to be implemented on the [controller.py class](./python/controller.py). Udacity provides a [seed project](https://github.com/udacity/FCND-Controls) all the code you need to be able to focus only on the controller, but changes on that code is welcome as well.  Udacity's FCND Simulator could be downloaded [here](https://github.com/udacity/FCND-Simulator-Releases/releases). The python code use [Udacidrone](https://udacity.github.io/udacidrone/) API to communicate with the simulator. This API use [MAVLink](http://qgroundcontrol.org/mavlink/start) protocol.
 
 ### Prerequisites
 
@@ -80,7 +80,7 @@ In order to check the implementation and do some tuning of the parameters before
 - [go_north](./python/trajectories/go_north.txt)
 - [stay_there](./python/trajectories/stay_there.txt)
 
-To load one of this trajectories instead of [test_trajectory.txt](./python/test_trajectory.txt), uncomment line 210 on [controls_flyer.py](./python/controls_flyer.py#L210) and set the desired trajectory file there. The generation of the trajectories was done by [Test Trajectory](./visualizations/Test Trajectory.ipynb) Jupyter Notebook.
+To load one of this trajectories instead of [test_trajectory.txt](./python/test_trajectory.txt), uncomment line 210 on [controls_flyer.py](./python/controls_flyer.py#L210) and set the desired trajectory file there. The generation of the trajectories was done by [Test Trajectory](./visualizations/Test%20Trajectory.ipynb) Jupyter Notebook.
 
 ## C++ implementation
 
@@ -105,8 +105,44 @@ In this scenario, we adjust the mass of the drone in [/cpp/config/QuadControlPar
 
 ![C++ Scenario 1](./images/cpp-scenario-1.gif)
 
-The video for is [cpp-scenario-1.mov](./videos/cpp-scenario-1.mov)
+This video is [cpp-scenario-1.mov](./videos/cpp-scenario-1.mov)
 
+When the scenario is passing the test, you should see this line on the standard output:
+
+```
+PASS: ABS(Quad.PosFollowErr) was less than 0.500000 for at least 0.800000 seconds
+```
+
+#### Scenario 2 : Body rate and roll/pitch control
+
+Now is time to start coding. The [GenerateMotorCommands method](./cpp/src/QuadControl.cpp#L58-L53) needs to be coded resolving this equations:
+
+![Moment force equations](./images/moments_force_eq.gif)
+
+Where all the `F_1` to `F_4` are the motors thrust, `tao(x,y,z)` are the moments on each direction, `F_t` is the total thrust, kappa is the drag/thrust ratio and `l` is the drone arm length over square root of two. These equations comes from the classroom lectures. There are a couple of thing to consider. For example, on NED coordinates the `z` axis is inverted that is why the moment on `z` was inverted here. Another observation while implementing this is that `F_3` and `F_4` are switched, e.g. `F_3` in the lectures is `F_4` on the simulator and the same for `F_4`.
+
+The second step is to implement the [BodyRateControl method](./cpp/src/QuadControl.cpp#L95-L121) applying a [P controller](https://en.wikipedia.org/wiki/Proportional_control) and the moments of inertia. At this point the `kpPQR` parameter have to me tuned to stop the drone from flipping, but first some thrust need to be commanded in the altitude control because we don't have thrust commanded on the `GenerateMotorCommands` anymore. A good value is `thurst = mass * CONST_GRAVITY`.
+
+Once this is done, we move on to the [RollPitchControl method](./cpp/src/QuadControl.cpp#L124-L167). For this implementation you need to apply a few equations. You need to apply a P controller to the elements `R13` and `R23` of the [rotation matrix](https://en.wikipedia.org/wiki/Rotation_matrix) from body-frame accelerations and world frame accelerations:
+
+![Roll and pitch P controller](./images/roll_pitch_p_controller.gif)
+
+But the problem is you need to output roll and pitch rates; so, there is another equation to apply:
+
+![From b to pq](./images/roll_pitch_from_b_to_pq.gif)
+
+It is important to noticed you received thrust and thrust it need to be inverted and converted to acceleration before applying the equations. After the implementation is done, start tuning `kpBank` and `kpPQR`(again? yes, and it is not the last time) util the drone flies more or less stable upward:
+
+![C++ Scenario 2](./images/cpp-scenario-2.gif)
+
+This video is [cpp-scenario-2.mov](./videos/cpp-scenario-2.mov)
+
+When the scenario is passing the test, you should see this line on the standard output:
+
+```
+PASS: ABS(Quad.Roll) was less than 0.025000 for at least 0.750000 seconds
+PASS: ABS(Quad.Omega.X) was less than 2.500000 for at least 0.750000 seconds
+```
 
 
 # [Project Rubric](https://review.udacity.com/#!/rubrics/1643/view)
