@@ -47,16 +47,15 @@ At this point, the simulator is waiting for connections ready to fly the drone. 
 python controls_flyer.py
 ```
 
-The drone will follow the trajectory specified by the file [test_trajectory.txt](./python/test_trajectory.txt). The video of the drone could be found [here](python-simulator.mov):
+The drone will follow the trajectory specified by the file [test_trajectory.txt](./python/test_trajectory.txt). The video of the drone could be found [here](python-simulator-1.mov):
 
-![Udacity's FCND Simulator Controls with the drone on trajectory](./images/python-simulator.gif)
+![Udacity's FCND Simulator Controls with the drone on trajectory](./images/python-simulator-1.gif)
 
 At the end of the execution, the code evaluates the performance based on the project acceptance criteria. You should see something similar to this:
 
 ```
 python controls_flyer.py
 Logs/TLog.txt
-For visual autograder start visdom server: python -m visdom.server
 Logs/NavLog.txt
 starting connection
 arming transition
@@ -65,12 +64,12 @@ landing transition
 disarm transition
 manual transition
 Closing connection ...
-Maximum Horizontal Error:  1.6877431474840618
-Maximum Vertical Error:  0.6513343825915365
-Mission Time:  4.223532
+Maximum Horizontal Error:  1.896498169249138
+Maximum Vertical Error:  0.636822964449316
+Mission Time:  2.121786
 Mission Success:  True
 ```
-The telemetry file for this particular execution is [this file](./python/telemetry/TLog02.txt). To tune the controller is very hard on this trajectory. In the beginning, you don't know what to expect. The trajectory looks something like this:
+The telemetry file for this particular execution is [this file](./python/telemetry/TLog01.txt). To tune the controller is very hard on this trajectory. In the beginning, you don't know what to expect. The trajectory looks something like this:
 
 ![Python simulator trajectory](./images/python-simulator-trajectory.png)
 
@@ -219,15 +218,15 @@ This markdown is the write-up.
 
 ### Implemented body rate control in python and C++.
 
-The body rate control is implemented as proportional control in [/python/controller.py body_rate_control method](./python/controller.py#L201-L222) from line 201 to 222 using Python and in [/cpp/src/QuadControl::BodyRateControl method ](/cpp/src/QuadControl.cpp#L95-L121) from line 95 to 121 using C++.
+The body rate control is implemented as proportional control in [/python/controller.py body_rate_control method](./python/controller.py#L179-L195) from line 179 to 195 using Python and in [/cpp/src/QuadControl::BodyRateControl method ](/cpp/src/QuadControl.cpp#L95-L121) from line 95 to 121 using C++.
 
 ### Implement roll pitch control in python and C++.
 
-The roll pitch control is implemented in [/python/controller.py roll_pitch_controller method](./python/controller.py#L168-L199) from line 168 to 199 using Python and in [/cpp/src/QuadControl::RollPitchControl method ](/cpp/src/QuadControl.cpp#L124-L167) from line 124 to 167 using C++.
+The roll pitch control is implemented in [/python/controller.py roll_pitch_controller method](./python/controller.py#L142-L177) from line 142 to 177 using Python and in [/cpp/src/QuadControl::RollPitchControl method ](/cpp/src/QuadControl.cpp#L124-L167) from line 124 to 167 using C++.
 
 ### Implement altitude control in python.
 
-The altitude control is implemented in [/python/controller.py altitude_control method](./python/controller.py#L146-L165) from line 146 to 165 using Python.
+The altitude control is implemented in [/python/controller.py altitude_control method](./python/controller.py#L112-L139) from line 112 to 139 using Python.
 
 ### Implement altitude controller in C++.
 
@@ -239,7 +238,7 @@ The lateral position control is implemented in [/python/controller.py lateral_po
 
 ### Implement yaw control in python and C++.
 
-The yaw control is implemented in [/python/controller.py yaw_control method](./python/controller.py#L224-L233) from line 224 to 233 using Python and in [/cpp/src/QuadControl::YawControl method ](/cpp/src/QuadControl.cpp#L270-L302) from line 270 to 302 using C++.
+The yaw control is implemented in [/python/controller.py yaw_control method](./python/controller.py#L197-L214) from line 197 to 214 using Python and in [/cpp/src/QuadControl::YawControl method ](/cpp/src/QuadControl.cpp#L270-L302) from line 270 to 302 using C++.
 
 ### Implement calculating the motor commands given commanded thrust and moments in C++.
 
@@ -249,18 +248,22 @@ The calculation implementation for the motor commands is in [/cpp/src/QuadContro
 
 ### Your python controller is successfully able to fly the provided test trajectory, meeting the minimum flight performance metrics.
 
+> For this, your drone must pass the provided evaluation script with the default parameters. These metrics being, your drone flies the test trajectory faster than 20 seconds, the maximum horizontal error is less than 2 meters, and the maximum vertical error is less than 1 meter.
+
 The Python implementation meets the minimum flight performance metrics:
 
 ```
-Maximum Horizontal Error:  1.6877431474840618
-Maximum Vertical Error:  0.6513343825915365
-Mission Time:  4.223532
+Maximum Horizontal Error:  1.896498169249138
+Maximum Vertical Error:  0.636822964449316
+Mission Time:  2.121786
 Mission Success:  True
 ```
 
 Telemetry files are provided on the [/python/telemetry](./python/telemetry) directory.
 
 ### Your C++ controller is successfully able to fly the provided test trajectory and visually passes the inspection of the scenarios leading up to the test trajectory.
+
+> Ensure that in each scenario the drone looks stable and performs the required task. Specifically check that the student's controller is able to handle the non-linearities of scenario 4 (all three drones in the scenario should be able to perform the required task with the same control gains used).
 
 The implementation pass scenarios 1 - 5 on the C++ simulator:
 
