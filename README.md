@@ -207,6 +207,12 @@ There are a few optional scenarios on this project, but I was exhausted. Too man
 
 No idea why some of them go nuts!!!!! (and then come back to the "formation".)
 
+**Post submit note** The tilt angle limit enforcing was missing on the `RollPitchControl`. Here is a video with no-crazy drones:
+
+![C++ Multidrone ok](./images/cpp-scenario-multi-drone-1.gif)
+
+Here is the [video](./videos/cpp-scenario-multi-drone-1.gif).
+
 # [Project Rubric](https://review.udacity.com/#!/rubrics/1643/view)
 
 ## Writeup
